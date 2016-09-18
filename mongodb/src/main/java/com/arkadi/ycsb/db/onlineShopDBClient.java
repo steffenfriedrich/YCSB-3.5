@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
 import com.yahoo.ycsb.ByteIterator;
+import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.Status;
 import com.yahoo.ycsb.db.OptionsSupport;
 import com.yahoo.ycsb.workloads.onlineshop.Author;
@@ -37,46 +38,75 @@ public class onlineShopDBClient extends onlineShopDB {
   List<Document> BULKINSERT_A = new ArrayList<>();
 
 
-  public void init() {
 
+  public void init() throws DBException {
     INIT_COUNT.incrementAndGet();
     synchronized (INCLUDE) {
+      if (mongoClient != null) {
+        return;
+      }
 
-      if (mongoClient != null) return;
       Properties props = getProperties();
+
+      // Set insert batchsize, default 1 - to be YCSB-original equivalent
       batchSize = Integer.parseInt(props.getProperty("batchsize", "1"));
-      useUpsert = Boolean.parseBoolean(props.getProperty("mongodb.upsert", "false"));
+
+      // Set is inserts are done as upserts. Defaults to false.
+      useUpsert = Boolean.parseBoolean(
+        props.getProperty("mongodb.upsert", "false"));
+
+      // Just use the standard connection format URL
+      // http://docs.mongodb.org/manual/reference/connection-string/
+      // to configure the client.
       String url = props.getProperty("mongodb.url", null);
       boolean defaultedUrl = false;
       if (url == null) {
         defaultedUrl = true;
         url = "mongodb://localhost:27017/ycsb?w=1";
       }
+
       url = OptionsSupport.updateUrl(url, props);
+
       if (!url.startsWith("mongodb://")) {
-        System.err.println("ERROR: Invalid URL: '" + url);
+        System.err.println("ERROR: Invalid URL: '" + url
+          + "'. Must be of the form "
+          + "'mongodb://<host1>:<port1>,<host2>:<port2>/database?options'. "
+          + "http://docs.mongodb.org/manual/reference/connection-string/");
         System.exit(1);
       }
 
       try {
         MongoClientURI uri = new MongoClientURI(url);
+
         String uriDb = uri.getDatabase();
-        databaseName = "bookStore";
-        if (!defaultedUrl && (uriDb != null) && !uriDb.isEmpty() && !"admin".equals(uriDb)) {
+        if (!defaultedUrl && (uriDb != null) && !uriDb.isEmpty()
+          && !"admin".equals(uriDb)) {
           databaseName = uriDb;
+        } else {
+          // If no database is specified in URI, use "ycsb"
+          databaseName = "ycsb";
+
         }
+
         readPreference = uri.getOptions().getReadPreference();
         writeConcern = uri.getOptions().getWriteConcern();
-        mongoClient = new MongoClient(uri);
-        database = mongoClient.getDatabase(databaseName).withReadPreference(readPreference).withWriteConcern(writeConcern);
-        System.out.println("mongo client connection created with " + url + "\n readPreference" + readPreference + "\n writeConcern" + writeConcern);
 
+        mongoClient = new MongoClient(uri);
+        database = mongoClient.getDatabase(databaseName)
+            .withReadPreference(readPreference)
+            .withWriteConcern(writeConcern);
+
+        System.out.println("mongo client connection created with " + url);
       } catch (Exception e1) {
-        System.err.println("Could not initialize MongoDB connection pool for Loader: " + e1.toString());
+        System.err
+          .println("Could not initialize MongoDB connection pool for Loader: "
+            + e1.toString());
         e1.printStackTrace();
+        return;
       }
     }
   }
+
 
  /*----------------------------------------------insert operations----------------------------------------------------*/
 
