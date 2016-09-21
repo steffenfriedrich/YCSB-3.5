@@ -40,6 +40,11 @@ public class onlineShopDBClient extends onlineShopDB {
 
 
   public void init() throws DBException {
+
+    mongoClient = new MongoClient( "localhost" , 27017 );
+    database = mongoClient.getDatabase("bookStore");
+  }
+  /*{
     INIT_COUNT.incrementAndGet();
     synchronized (INCLUDE) {
       if (mongoClient != null) {
@@ -105,7 +110,7 @@ public class onlineShopDBClient extends onlineShopDB {
         return;
       }
     }
-  }
+  }*/
 
 
  /*----------------------------------------------insert operations----------------------------------------------------*/
