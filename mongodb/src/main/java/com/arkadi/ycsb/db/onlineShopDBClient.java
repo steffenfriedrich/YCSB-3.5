@@ -1,3 +1,4 @@
+
 package com.arkadi.ycsb.db;
 
 import com.mongodb.*;
@@ -6,6 +7,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
+import com.mongodb.client.result.UpdateResult;
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.Status;
@@ -19,6 +21,8 @@ import org.bson.conversions.Bson;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.Arrays.asList;
 
 
 public class onlineShopDBClient extends onlineShopDB {
@@ -38,13 +42,8 @@ public class onlineShopDBClient extends onlineShopDB {
   List<Document> BULKINSERT_A = new ArrayList<>();
 
 
-
   public void init() throws DBException {
 
-    mongoClient = new MongoClient( "localhost" , 27017 );
-    database = mongoClient.getDatabase("bookStore");
-  }
-  /*{
     INIT_COUNT.incrementAndGet();
     synchronized (INCLUDE) {
       if (mongoClient != null) {
@@ -98,8 +97,8 @@ public class onlineShopDBClient extends onlineShopDB {
 
         mongoClient = new MongoClient(uri);
         database = mongoClient.getDatabase(databaseName)
-            .withReadPreference(readPreference)
-            .withWriteConcern(writeConcern);
+          .withReadPreference(readPreference)
+          .withWriteConcern(writeConcern);
 
         System.out.println("mongo client connection created with " + url);
       } catch (Exception e1) {
@@ -110,10 +109,13 @@ public class onlineShopDBClient extends onlineShopDB {
         return;
       }
     }
-  }*/
+  }
 
 
- /*----------------------------------------------insert operations----------------------------------------------------*/
+
+
+/*----------------------------------------------insert operations----------------------------------------------------*/
+
 
   @Override
   public Status insertUser(int userID, String userName, Date birthDate) {
@@ -145,11 +147,7 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-
-
-  /**
-   * db.author.insertOne(toInsertAuthor)
-   */
+   //db.author.insertOne(toInsertAuthor)
   @Override
   public Status insertAuthor(int authorID, String authorFullName, String gender, Date birthDate, String resume) {
 
@@ -182,9 +180,7 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.book.insertOne(toInsertBook)
-   */
+   // db.book.insertOne(toInsertBook)
   @Override
   public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText, String language, HashMap<Integer, String> authors) {
     try {
@@ -218,13 +214,7 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-//TODO  new getter setter methods for new design
-
-  //wird nur vom client benutzt und kann nicht von ausen angewand werden
-
-  /**
-   * db.recommendations.insertOne(toInsertRecSlot)
-   */
+   //db.recommendations.insertOne(toInsertRecSlot)
   private Status insertRecommendationBundle(int bookID, String bookTitle) {
 
     try {
@@ -243,9 +233,7 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.recommendations.updateOne({_id: recommendationBundleID},{$push:{recommendations:{values}})
-   */
+   //db.recommendations.updateOne({_id: recommendationBundleID},{$push:{recommendations:{values}})
   @Override
   public Status insertRecommendation(int bookID, int userID, int stars, int likes, String text, Date createTime) {
 
@@ -258,163 +246,122 @@ public class onlineShopDBClient extends onlineShopDB {
       .append("text", text);
     database.getCollection("recommendations").updateOne(query, new Document("$push", new Document("recommendations", toInsertRecommendation)));
     database.getCollection("users").updateOne(query2, new Document("$push", new Document("bookRecommended", bookID)));
+    database.getCollection("recommendations").updateOne(query, new Document("$inc", new Document("recommendCount", 1)));
+    database.getCollection("recommendations").updateOne(query, new Document("$inc", new Document("ratingAverage", stars)));
     return Status.OK;
   }
 
-
-/**
- db.authors.updateOne({_id: authorID},{$push:{bookPublished:{_id: bookID,bookName:bookName}}})
-
- public Status insertBookReferenceInAuthor(int authorID, int bookID, String bookName) {
+   //db.authors.updateOne({_id: authorID},{$push:{bookPublished:{_id: bookID,bookName:bookName}}})
+  public Status insertBookReferenceInAuthor(int authorID, int bookID, String bookName) {
  Document query = new Document("_id", authorID);
  Document update = new Document("$push", new Document("bookPublished", new Document("_id", bookID).append("bookName", bookName)));
  UpdateResult result = database.getCollection("authors").updateOne(query, update);
 
  return Status.OK;
  }
- */
 
-  /*----------------------------------------------get operations -----------------------------------------------------*/
 
-  /**
-   * db.recommendations.find({"_id":recommendationBundleID}).sort({"recommendations._id",-1}).limit(amount)
-   * find a special amount of  latest recommendations recommendations and calculate the average user rating
-   */
+/*----------------------------------------------get operations -----------------------------------------------------*/
+
+
+   //db.recommendations.find({"_id":recommendationBundleID}).sort({"recommendations._id",-1}).limit(amount)
+   //find a special amount of  latest recommendations recommendations and calculate the average user rating
   @Override
   public Recommendation getLatestRecommendations(int bookID, int limit) {
-    Document query = new Document("_id", bookID);
-    Document sortKrit = new Document("recommendations._id", -1);
-    FindIterable<Document> result = database.getCollection("recommendations").find(query).sort(sortKrit).limit(limit);
+    Document recommendationBundle = new Document("_id", bookID);
+    Document project = new Document("_id", 0).append("recommendations", 1).append("recommendations", new Document("$slice", -limit));
+    Document newestRecommendations = database.getCollection("recommendations").find(recommendationBundle).projection(project).first();
 
-    final ArrayList<Integer> stars = new ArrayList<>();
-    result.forEach(new Block<Document>() {
-      @Override
-      public void apply(final Document document) {
-        stars.add(document.getInteger("stars"));
-      }
-    });
-
-    int evStars = 0;
-    for (Integer i : stars) {
-      evStars = evStars + i;
-    }
-
-    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), bookID, evStars / limit);
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), (ArrayList<Document>) newestRecommendations.get("recommendations"));
   }
 
-  /**
-   * db.recommendations.find({_id: recommendationBundleID}).first()
-   */
+   //db.recommendations.find({_id: recommendationBundleID}).first()
   @Override
   public Recommendation getAllRecommendations(int bookID) {
     Document query = new Document("_id", bookID);
-    Document recommDoc = database.getCollection("recommendations").find(query).first();
+    List<Document> recommendations = (ArrayList<Document>) database.getCollection("recommendations").find(query).first().get("recommendations");
 
-    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), (String) recommDoc.get("bookTitle"), (int) recommDoc.get("recommendCount"));
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), recommendations);
 
   }
 
-  /**
-   * db.authors.find({_id:authorID}).first()
-   */
+  //db.authors.find({_id:authorID}).first()
   @Override
   public Author getAuthorByID(int authorID) {
     Document query = new Document("_id", authorID);
-    Document result = database.getCollection("authors").find(query).first();
+    Document author = database.getCollection("authors").find(query).first();
 
-    String fullName = result.getString("authorFullName");
-    return new Author(Status.OK.getName(), Status.OK.getDescription(), result.getString("authorFullName"), result.getString("gender"), result.getString("resume"));
+    return new Author(Status.OK.getName(), Status.OK.getDescription(),author);
   }
 
-  /**
-   * db.books.find({genres:{ $all: [genreList[0],genreList[n]]}}).limit(max)
-   */
+   //db.books.find({genres:{ $all: [genreList[0],genreList[n]]}}).limit(max)
   @Override
   public Book findBooksByGenre(String genreList, int limit) {
-    //String[] genres = genreList.split(","); not supported
-    List<String> genres = Arrays.asList(genreList.split(","));
+    List<String> genres = asList(genreList.split(","));
     Document query = new Document("genres", new Document("$all", genres));
-    FindIterable<Document> result = database.getCollection("books").find(query).limit(limit);
-
-    final HashSet books = new HashSet();
-    result.forEach(new Block<Document>() {
-      @Override
-      public void apply(final Document document) {
-        books.add(document.getString("title"));
-      }
-    });
-
+    List<Document> books = database.getCollection("books").find(query).limit(limit).into(new ArrayList<Document>());
 
     return new Book(Status.OK.getName(), Status.OK.getDescription(), books);
   }
 
-
-  /**
-   * db.recommendations.aggregate([{"$match":{"_id": bookID }},{"$unwind": "$recommendations"},{"$match": {"recommendations._id": userID,{"$project": {"_id":0,"recommendations":1}},{"$limit": 20}])
-   */
+  // > db.recommendations.aggregate([{"$match":{"_id": 16 }},{"$unwind": "$recommendations"},{"$match": {"recommendations._id": 172}},{"$project": {"_id":0,"recommendations":1}}]).pretty()
   @Override
   public Recommendation getUsersRecommendations(int userID) {
-    Document query = new Document("_id", userID);
-    Document booksID = database.getCollection("users").find(query).first();
-    ArrayList<Integer> booksIDs = (ArrayList<Integer>) booksID.get("booksRecommended");
-    final List<AggregateIterable<Document>> userRecommends = new LinkedList<>();
+    Document user = new Document("_id", userID);
+    List<Integer> books = (ArrayList<Integer>) database.getCollection("users").find(user).first().get("bookRecommended");
+    List<Document> userRecommends = new ArrayList<>();
 
-    // mindestens ein buch wurde kommentiert
+    if (books != null) {
+      for (int book : books) {
+        Document matchBook =      new Document("$match",  new Document("_id",book));
+        Document unwind =         new Document("$unwind", "$recommendations");
+        Document matchRecommend = new Document("$match",  new Document("recommendations._id", userID));
+        Document project =        new Document("$project",new Document("_id", 0).append("recommendations", 1));
 
-    System.out.println("booksIDs = " + booksIDs.size());
-    Recommendation rec = new Recommendation(Status.OK.getName(), Status.OK.getDescription(), booksIDs.get(0), 1);
-
-    if (booksIDs.size() != 0) {
-      for (int book : booksIDs) {
-        Bson querryBook = new Document("$match", (book));
-        Bson unwind = new Document("$unwind", "$recommendations");
-        Bson querryRecommend = new Document("$match", new Document("recommendations._id", userID));
-        Bson project = new Document("_id", 0).append("recommendations", 1);
-        Bson[] array = {querryBook, unwind, querryRecommend, project};
-
-
-        userRecommends.add(database.getCollection("recommendations").aggregate(new ArrayList<>(Arrays.asList(array))));
+        userRecommends.add(database.getCollection("recommendations").aggregate(Arrays.asList(matchBook,unwind,matchRecommend,project)).first());
       }
 
-      return rec;
+      return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), userRecommends);
     }
-    return rec;
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), new Document("Status", "no recommendations exists "));
   }
 
-  /*----------------------------------------------find operations ----------------------------------------------------*/
 
-  /**
-   * db.books.find({"name": bName}.first()
-   */
+
+/*----------------------------------------------find operations ----------------------------------------------------*/
+
+
+
+   // db.books.find({"name": bName}).first()
   @Override
   public Book findBookByName(String bookName) {
-    Document result = database.getCollection("books").find(new Document("title", bookName)).first();
+    Document book = database.getCollection("books").find(new Document("title", bookName)).first();
 
-    String title = result.getString("title");
-    return new Book(Status.OK.getName(), Status.OK.getDescription(), result.getString("title"), result.getString("introductionText"), result.getString("language"));
+    return new Book(Status.OK.getName(), Status.OK.getDescription(), book);
   }
 
-  /**
-   * Resultauthor  = db.books.find({_id:bookID}{author:1}
-   * db.authors.find(Resultauthor)
-   */
+  // Resultauthor  = db.books.find({_id:bookID}{author:1}
+   // db.authors.find(Resultauthor)
   @Override
-  public Author findAuthorByBookID(int bookID) {
-    Document query = new Document("_id", bookID);
-    Document projection = new Document("authors", 1).append("_id", 0);
-    Document resultAuthor = (Document) database.getCollection("books").find(query).projection(projection);
-    Document result = database.getCollection("authors").find(resultAuthor).first();
+  public Author findAuthorsByBookID(int bookID) {
+    Document book = new Document("_id", bookID);
+    ArrayList<Document> bookAuthors = (ArrayList<Document>)database.getCollection("books").find(book).first().get("authors");
 
-    String fullName = result.getString("authorFullName");
-    return new Author(Status.OK.getName(), Status.OK.getDescription(), result.getString("authorFullName"), result.getString("gender"), result.getString("resume"));
+    ArrayList<Document> authors = new ArrayList<>();
+    for (Document author : bookAuthors ) {
+      authors.add(database.getCollection("authors").find(new Document("_id", author.getInteger("_id"))).first());
+    }
 
+    return new Author(Status.OK.getName(), Status.OK.getDescription(),authors);
 
   }
+
+
 /*----------------------------------------------update operations --------------------------------------------------*/
 
-  /**
-   * db.books.updateOne({_id: bookID},{$set:bookValues})
-   */
+
+
+   // db.books.updateOne({_id: bookID},{$set:bookValues})
   @Override
   public Status updateBook(int bookID, String title, String language, String introduction) {
     Document query = new Document("_id", bookID);
@@ -429,9 +376,7 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.recommendations.updateOne({_id: 19,"recommendations._id": 312},{$set: {"recommendations.0.stars": 1,"recommendations.0.text":"hallo"}})
-   */
+  // db.recommendations.updateOne({_id: 19,"recommendations._id": 312},{$set: {"recommendations.0.stars": 1,"recommendations.0.text":"hallo"}})
   @Override
   public Status updateRecommendation(int bookID, int userID, int stars, String text) {
     Document query = new Document("_id", bookID).append("recommendations._id", userID);
@@ -453,13 +398,13 @@ public class onlineShopDBClient extends onlineShopDB {
 
 
 
-  /*----------------------------------------------delete Operations ---------------------------------------------------*/
+/*----------------------------------------------delete Operations ---------------------------------------------------*/
 
 
-  /**
-   * db.books.findOne({_id: _bookID},{author:1})
-   * db.colA.updateOne({_id: _authorID,},{$pull:{bookPublished:{_id: bookID}})
-   */
+
+
+   //db.books.findOne({_id: _bookID},{author:1})
+   // db.colA.updateOne({_id: _authorID,},{$pull:{bookPublished:{_id: bookID}})
   public Status deleteBookReferenceFromAuthor(int bookID) {
     Document queryBook = new Document("_id", bookID);
     Document projection = new Document("authors", 1);
@@ -472,9 +417,8 @@ public class onlineShopDBClient extends onlineShopDB {
   }
 
 
-  /**
-   * db.books.deleteOne({_id: bookID}}
-   */
+
+   //db.books.deleteOne({_id: bookID}}
   @Override
   public Status deleteBook(int bookID) {
     Document queryBook = new Document("_id", bookID);
@@ -483,10 +427,8 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.authors.updateOne({_id: _authorID,},{$pull:{bookPublished:{_id: bookID}})
-   */
 
+   // db.authors.updateOne({_id: _authorID,},{$pull:{bookPublished:{_id: bookID}})
   private Status deleteBookReferenceFromAuthorList(int bookID) {
     Document query = new Document("_id", bookID);
     Document project = new Document("authors._id", 1).append("_id", 0);
@@ -498,9 +440,8 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.recommendations.deleteOne({_id: bookID})
-   */
+
+   // db.recommendations.deleteOne({_id: bookID})
   @Override
   public Status deleteAllRecommendationsBelongToBook(int bookID) {
     Document query = new Document("_id", bookID);
@@ -509,9 +450,8 @@ public class onlineShopDBClient extends onlineShopDB {
     return Status.OK;
   }
 
-  /**
-   * db.authors.deleteOne({_id: authorID})
-   */
+
+   // db.authors.deleteOne({_id: authorID})
   @Override
   public Status deleteAuthor(int authorID) {
     Document query = new Document("_id", authorID);
@@ -521,7 +461,9 @@ public class onlineShopDBClient extends onlineShopDB {
   }
 
 
-  /*----------------------------------------------Deprecated operations-----------------------------------------------*/
+
+/*----------------------------------------------Deprecated operations-----------------------------------------------*/
+
 
 
   @Override
@@ -549,4 +491,5 @@ public class onlineShopDBClient extends onlineShopDB {
     return null;
   }
 }
+
 

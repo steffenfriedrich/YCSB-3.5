@@ -1,7 +1,7 @@
 package com.arkadi.ycsb.db;
 
 
-public class onlineShopDBClientSpecializedQueries extends onlineShopDBClient {
+//public class onlineShopDBClientSpecializedQueries extends onlineShopDBClient {
 
 /*
   *//**
@@ -46,4 +46,4 @@ public class onlineShopDBClientSpecializedQueries extends onlineShopDBClient {
    //db.recommendations.aggregate([{"$match":{"_id": 16 }},{"$unwind": "$recommendations"},{"$match": {"recommendations._id": 393}},{"$project": {"_id":0,"recommendations":1}},{"$limit": 20}])
 
 **/
-}
+//}

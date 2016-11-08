@@ -3,8 +3,9 @@
 workload=com.yahoo.ycsb.workloads.OnlineShopWorkload
 requestdistribution=uniform
 recordcount = 950
-operationcount = 1000
+operationcount = 20000
 
+#//TODO in propotions angeben
 # load phase insert
 userStart=0
 bookStart=0

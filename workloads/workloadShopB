@@ -2,14 +2,17 @@
 
 workload=com.yahoo.ycsb.workloads.OnlineShopWorkload
 requestdistribution=zipfian
-recordcount = 950
-operationcount = 1000
+recordcount = 600
+operationcount = 600
 
 # load phase insert
+userStart=0
+bookStart=0
+authorStart=0
 userCount=500
 authorCount=50
 bookCount=300
-recCount= 100
+recCount=100
 
 # transaction insert
 insertAuthorStart= 51
@@ -17,13 +20,13 @@ insertAuthorCount= 50
 insertBookStart=301
 insertBookCount 500
 insertUserStart= 501
-insertUserCount= 5000
+insertUserCount= 50
 
 # transaction insert proportions
 insertUser=0.25
 insertBook=0.25
-insertAuthor=0.25
-insertRecommendation=0.25
+insertAuthor=0.1
+insertRecommendation=0.4
 
 # transaction read proportions
 getLatestRecommendations=0

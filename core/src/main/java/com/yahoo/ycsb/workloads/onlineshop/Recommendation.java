@@ -1,55 +1,59 @@
 package com.yahoo.ycsb.workloads.onlineshop;
 
 import com.yahoo.ycsb.Status;
+import org.bson.Document;
+
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Recommendation extends Status {
 
-  private int stars;
-  private String bookTitle;
-  private int  count;
-  private int bookID;
-  private int userID;
 
-  //object constructor
-  public Recommendation(String name, String description, int stars,String bookTitle) {
+  List<Document> recommendations;
+  Document recommendation;
+
+  public Recommendation(String name, String description, Document recommendation) {
     super(name, description);
-    this.stars = stars;
-    this.bookTitle = bookTitle;
-  }
-  // bundle constructor
-  public Recommendation(String name, String description, String bookTitle, int count) {
-    super(name, description);
-    this.count = count;
-    this.bookTitle = bookTitle;
-  }
-  // set recommendations fo a book
-  public Recommendation(String name, String description, int bookID,int stars) {
-    super(name, description);
-    this.bookID = bookID;
-    this.stars = stars;
+    this.recommendation = recommendation;
   }
 
-  //get all user recommendation
-  public Recommendation(String name, String description, int belongToUserID) {
+  public Recommendation(String name, String description, List<Document> recommendations) {
     super(name, description);
-    this.userID = belongToUserID;
+    this.recommendations = recommendations;
   }
 
 
   public String getBookTitle() {
-    return bookTitle;
+    return recommendation.getString("bookTitle");
   }
 
-  public int getBookID() {
-    return bookID;
+  public int getUserID() {
+    return recommendation.getInteger("_id");
   }
 
   public int getStars() {
-    return stars;
+    return recommendation.getInteger("stars");
   }
 
   public int getCount() {
-    return count;
+    return recommendations.size();
+  }
+
+  public int evgRating() {
+    int rating;
+    int stars = 0;
+    if (recommendations != null) {
+      for (Document recommend : recommendations) {
+        if (recommend.getInteger("stars") != null) {
+          stars = stars + recommend.getInteger("stars");
+        }
+      }
+      rating = stars / recommendations.size();
+    } else rating = 0;
+
+
+    return rating;
   }
 }

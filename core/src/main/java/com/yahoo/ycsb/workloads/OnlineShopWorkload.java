@@ -78,7 +78,7 @@ public class OnlineShopWorkload extends Workload {
   private  Boolean dotransactions;
 
   private AcknowledgedCounterGenerator transactioninsertkeysequenceUser;
-  private AcknowledgedCounterGenerator transactioninsertkeysequenceBook;
+   private AcknowledgedCounterGenerator transactioninsertkeysequenceBook;
   private AcknowledgedCounterGenerator transactioninsertkeysequenceAuthor;
 
 
@@ -256,7 +256,7 @@ public class OnlineShopWorkload extends Workload {
     genres = new DiscreteGenerator();
     genres.addValue(0.20, "drama");
     genres.addValue(0.20, "novel");
-    genres.addValue(0.20, "Comedy");
+    genres.addValue(0.20, "comedy");
     genres.addValue(0.20, "romance");
     genres.addValue(0.20, "horror");
 
@@ -382,7 +382,7 @@ public class OnlineShopWorkload extends Workload {
   }
 
 
-  private void doTransaction_InsertAuthor(onlineShopDB db) {
+  public void doTransaction_InsertAuthor(onlineShopDB db) {
     int authorID;
 
     if (dotransactions) {

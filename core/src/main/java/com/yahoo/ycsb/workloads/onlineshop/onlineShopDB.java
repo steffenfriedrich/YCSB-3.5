@@ -61,7 +61,7 @@ public abstract class onlineShopDB extends DB {
   public abstract Book findBookByName(String bookName);
 
 
-  public abstract Author findAuthorByBookID(int bookID);
+  public abstract Author findAuthorsByBookID(int bookID);
 
 
   public abstract Status updateBook(int bookID, String title, String language, String introduction);

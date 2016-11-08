@@ -297,12 +297,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
   }
 
   @Override
-  public Author findAuthorByBookID(int bookID) {
+  public Author findAuthorsByBookID(int bookID) {
     {
       try (final TraceScope span = _tracer.newScope(SCOPE_STRING_FIND_AUTHOR_BY_BOOK)) {
         long ist = _measurements.getIntendedtartTimeNs();
         long st = System.nanoTime();
-        Author res = _db.findAuthorByBookID(bookID);
+        Author res = _db.findAuthorsByBookID(bookID);
         long en = System.nanoTime();
         measure("findAuthorByBookID", res, ist, st, en);
         _measurements.reportStatus("findAuthorByBookID", res);

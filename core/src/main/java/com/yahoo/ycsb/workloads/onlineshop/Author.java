@@ -1,32 +1,42 @@
 package com.yahoo.ycsb.workloads.onlineshop;
 
 import com.yahoo.ycsb.Status;
+import java.util.ArrayList;
+import org.bson.Document;
 
 /**
  * Created by adaschkewitsch on 12.08.2016.
  */
 public class Author extends Status {
 
-  private String fullName;
-  private String gender;
-  private String resume;
 
-  public Author(String name, String description,String fullName,String gender, String resume) {
+  Document author;
+  ArrayList<Document> authors;
+
+  public Author(String name, String description, Document author) {
     super(name, description);
-    this.fullName=fullName;
-    this.gender=gender;
-    this.resume=resume;
+    this.author = author;
+  }
+  public Author(String name, String description, ArrayList<Document> authors) {
+    super(name, description);
+    this.authors = authors;
   }
 
+
   public String getFullName() {
-    return fullName;
+    return author.getString("authorFullName");
   }
 
   public String getGender() {
-    return gender;
+    return author.getString("gender");
   }
 
   public String getResume() {
-    return resume;
+    return author.getString("resume");
   }
+
+  public int getCount(){
+    return authors.size();
+  }
+
 }

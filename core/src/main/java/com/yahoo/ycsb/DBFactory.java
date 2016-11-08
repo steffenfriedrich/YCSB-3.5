@@ -26,9 +26,9 @@ import java.util.Properties;
 /**
  * Creates a DB layer by dynamically classloading the specified DB class.
  */
- class DBFactory {
+class DBFactory {
   @SuppressWarnings("unchecked")
-   static DB newDB(String dbname, Properties properties, final Tracer tracer) throws UnknownDBException {
+  static DB newDB(String dbname, Properties properties, final Tracer tracer) throws UnknownDBException {
     ClassLoader classLoader = DBFactory.class.getClassLoader();
 
     DB ret = null;
@@ -44,7 +44,7 @@ import java.util.Properties;
     }
 
     ret.setProperties(properties);
-    if (dbname.contains("onlineShopDBClient")||dbname.contains("onlineShopDBClientAlternativeSchema")) {
+    if (dbname.contains("onlineShopDBClient") || dbname.contains("onlineShopDBClient2") || dbname.contains("onlineShopDBClientSQL")) {
       return new onlineShopDBWrapper((onlineShopDB) ret, tracer);
     } else {
       return new DBWrapper(ret, tracer);

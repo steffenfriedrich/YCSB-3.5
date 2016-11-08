@@ -1,38 +1,52 @@
 package com.yahoo.ycsb.workloads.onlineshop;
 
 import com.yahoo.ycsb.Status;
+import org.bson.Document;
 
-import java.util.HashSet;
+import java.util.List;
 
 
 public class Book extends Status {
 
-  private String title;
-  private HashSet bookTitles;
-  private String introText;
-  private String language;
 
-  public Book(String name, String description,String title,String introText,String language ) {
+  private List<Document> books;
+  private Document book;
+
+  public Book(String name, String description, List<Document> books) {
     super(name, description);
-    this.title=title;
-    this.introText=introText;
-    this.language=language;
+    this.books = books;
   }
 
-  public Book(String name, String description, HashSet bookTitles ) {
+  public Book(String name, String description, Document books) {
     super(name, description);
-    this.bookTitles=bookTitles;
+    this.book = book;
+  }
+
+  public Document getBook() {
+
+    return book;
+  }
+
+  public List<Document> getBooks() {
+
+    return books;
   }
 
   public String getTitle() {
-    return title;
+    return book.getString("title");
   }
 
   public String getIntroText() {
-    return introText;
+    return book.getString("introductionText");
   }
 
   public String getLanguage() {
-    return language;
+    return book.getString("language");
   }
+
+  public int getBooksCount() {
+    return books.size();
+  }
+
+
 }
