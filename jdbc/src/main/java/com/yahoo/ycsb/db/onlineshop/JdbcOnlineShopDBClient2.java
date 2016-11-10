@@ -1,18 +1,18 @@
-package com.arkadi.ycsb.db;
+package com.yahoo.ycsb.db.onlineshop;
 
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.Status;
 import com.yahoo.ycsb.workloads.onlineshop.Author;
 import com.yahoo.ycsb.workloads.onlineshop.Book;
 import com.yahoo.ycsb.workloads.onlineshop.Recommendation;
-import com.yahoo.ycsb.workloads.onlineshop.onlineShopDB;
+import com.yahoo.ycsb.workloads.onlineshop.OnlineShopDB;
 import org.bson.Document;
 
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
 
-public class onlineShopDBClientSQL2 extends onlineShopDB {
+public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
   static String serverName;
   static String dbName;
   static Connection database;

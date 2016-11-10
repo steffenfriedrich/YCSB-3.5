@@ -30,11 +30,11 @@ import java.util.*;
  * Wrapper around a "real" DB that measures latencies and counts return codes.
  * Also reports latency separately between OK and failed operations.
  */
-public class onlineShopDBWrapper extends onlineShopDB {
+public class OnlineShopDBWrapper extends OnlineShopDB {
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY = "reportlatencyforeacherror";
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT = "false";
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY = "latencytrackederrors";
-  private final onlineShopDB _db;
+  private final OnlineShopDB _db;
   private final Measurements _measurements;
 
 
@@ -62,7 +62,7 @@ public class onlineShopDBWrapper extends onlineShopDB {
   private boolean reportLatencyForEachError = false;
   private HashSet<String> latencyTrackedErrors = new HashSet<>();
 
-  public onlineShopDBWrapper(final onlineShopDB db, final Tracer tracer) {
+  public OnlineShopDBWrapper(final OnlineShopDB db, final Tracer tracer) {
     _db = db;
     _measurements = Measurements.getMeasurements();
     _tracer = tracer;
@@ -76,7 +76,7 @@ public class onlineShopDBWrapper extends onlineShopDB {
     SCOPE_STRING_GET_ALL_RECOMMENDATION = simple + "#getAllRecommendations";
     SCOPE_STRING_GET_USERS_RECOMMENDATION = simple + "#getUsersRecommendations";
     SCOPE_STRING_GET_AUTHOR_BY_ID = simple + "#getAuthorByID";
-    SCOPE_STRING_GET_BOOKS_BY_GENRE = simple + "#getBooksByGenre";
+    SCOPE_STRING_GET_BOOKS_BY_GENRE = simple + "#findBooksByGenre";
     SCOPE_STRING_FIND_BOOKS_NAME = simple + "#findBooksName";
     SCOPE_STRING_FIND_AUTHOR_BY_BOOK = simple + "#findAuthorByBook";
     SCOPE_STRING_UPDATE_AUTHOR = simple + "#updateAuthor";
@@ -118,7 +118,7 @@ public class onlineShopDBWrapper extends onlineShopDB {
           this.latencyTrackedErrors = new HashSet<>(Arrays.asList(latencyTrackedErrors.split(",")));
         }
       }
-      System.err.println("onlineShopDBWrapper: report latency for each error is "
+      System.err.println("OnlineShopDBWrapper: report latency for each error is "
         + this.reportLatencyForEachError
         + " and specific error codes to track"
         + " for latency are: "
@@ -144,7 +144,6 @@ public class onlineShopDBWrapper extends onlineShopDB {
   }
 
 
-  /*----------------------------------client wrapper methods----------------------------------------------------------*/
   @Override
   public Status insertUser(int userID, String userName, Date birthDate) {
     {
@@ -153,8 +152,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.insertUser(userID, userName, birthDate);
         long en = System.nanoTime();
-        measure("insertUser", res, ist, st, en);
-        _measurements.reportStatus("insertUser", res);
+        measure("InsertUser", res, ist, st, en);
+        measure("Insert", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("InsertUser", res);
+        _measurements.reportStatus("Insert", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -168,8 +171,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.insertAuthor(authorID, authorFullName, gender, birthDate, resume);
         long en = System.nanoTime();
-        measure("insertAuthor", res, ist, st, en);
-        _measurements.reportStatus("insertAuthor", res);
+        measure("InsertAuthor", res, ist, st, en);
+        measure("Insert", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("InsertAuthor", res);
+        _measurements.reportStatus("Insert", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -183,8 +190,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.insertBook(bookID, bookTitle, genres, introductionText, language, authors);
         long en = System.nanoTime();
-        measure("insertBook", res, ist, st, en);
-        _measurements.reportStatus("insertBook", res);
+        measure("InsertBook", res, ist, st, en);
+        measure("Insert", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("InsertBook", res);
+        _measurements.reportStatus("Insert", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -199,8 +210,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.insertRecommendation(bookID, userID, stars, likes, text, createTime);
         long en = System.nanoTime();
-        measure("insertRecommendations", res, ist, st, en);
-        _measurements.reportStatus("insertRecommendations", res);
+        measure("InsertRecommendations", res, ist, st, en);
+        measure("Insert", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("InsertRecommendations", res);
+        _measurements.reportStatus("Insert", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -214,8 +229,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Recommendation res = _db.getLatestRecommendations(bookID, limit);
         long en = System.nanoTime();
-        measure("getLatestRecommendations", res, ist, st, en);
-        _measurements.reportStatus("getLatestRecommendations", res);
+        measure("GetLatestRecommendations", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("GetLatestRecommendations", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -229,8 +248,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Recommendation res = _db.getAllRecommendations(bookID);
         long en = System.nanoTime();
-        measure("getAllRecommendations", res, ist, st, en);
-        _measurements.reportStatus("getAllRecommendations", res);
+        measure("GetAllRecommendations", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("GetAllRecommendations", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -244,8 +267,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Recommendation res = _db.getUsersRecommendations(userID);
         long en = System.nanoTime();
-        measure("getUsersRecommendations", res, ist, st, en);
-        _measurements.reportStatus("getUsersRecommendations", res);
+        measure("GetUsersRecommendations", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("GetUsersRecommendations", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -259,8 +286,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Author res = _db.getAuthorByID(authorID);
         long en = System.nanoTime();
-        measure("getAuthorByID", res, ist, st, en);
-        _measurements.reportStatus("getAuthorByID", res);
+        measure("GetAuthorByID", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("GetAuthorByID", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -274,8 +305,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Book res = _db.findBooksByGenre(genreList, limit);
         long en = System.nanoTime();
-        measure("findBooksByGenre", res, ist, st, en);
-        _measurements.reportStatus("findBooksByGenre", res);
+        measure("FindBooksByGenre", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("FindBooksByGenre", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -289,8 +324,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Book res = _db.findBookByName(bookName);
         long en = System.nanoTime();
-        measure("findBooksName", res, ist, st, en);
-        _measurements.reportStatus("findBooksName", res);
+        measure("FindBooksName", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("FindBooksName", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -304,8 +343,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Author res = _db.findAuthorsByBookID(bookID);
         long en = System.nanoTime();
-        measure("findAuthorByBookID", res, ist, st, en);
-        _measurements.reportStatus("findAuthorByBookID", res);
+        measure("FindAuthorByBookID", res, ist, st, en);
+        measure("Read", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("FindAuthorByBookID", res);
+        _measurements.reportStatus("Read", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -319,8 +362,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.updateAuthor(authorID, authorName, gender, birthDate, resume);
         long en = System.nanoTime();
-        measure("updateAuthor", res, ist, st, en);
-        _measurements.reportStatus("updateAuthor", res);
+        measure("UpdateAuthor", res, ist, st, en);
+        measure("Update", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("UpdateAuthor", res);
+        _measurements.reportStatus("Update", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -334,8 +381,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.updateBook(bookID, title, language, introduction);
         long en = System.nanoTime();
-        measure("updateBook", res, ist, st, en);
-        _measurements.reportStatus("updateBook", res);
+        measure("UpdateBook", res, ist, st, en);
+        measure("Update", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("UpdateBook", res);
+        _measurements.reportStatus("Update", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -349,29 +400,16 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.updateRecommendation(bookID, userID, stars, text);
         long en = System.nanoTime();
-        measure("updateRecommendation", res, ist, st, en);
-        _measurements.reportStatus("updateRecommendation", res);
+        measure("UpdateRecommendation", res, ist, st, en);
+        measure("Update", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("UpdateRecommendation", res);
+        _measurements.reportStatus("Update", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
   }
-
-  /*
-  @Override
-  public Status deleteBookReferenceFromAuthorList(int authorID, int bookID) {
-    {
-      try (final TraceScope span = _tracer.newScope(SCOPE_STRING_DELETE)) {
-        long ist = _measurements.getIntendedtartTimeNs();
-        long st = System.nanoTime();
-        Status res = _db.deleteBookReferenceFromAuthorList(authorID, bookID);
-        long en = System.nanoTime();
-        measure("DELETE", res, ist, st, en);
-        _measurements.reportStatus("DELETE", res);
-        return res;
-      }
-    }
-  }
-*/
 
   @Override
   public Status deleteBook(int bookID) {
@@ -381,28 +419,16 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.deleteBook(bookID);
         long en = System.nanoTime();
-        measure("deleteBook", res, ist, st, en);
-        _measurements.reportStatus("deleteBook", res);
+        measure("DeleteBook", res, ist, st, en);
+        measure("Delete", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("DeleteBook", res);
+        _measurements.reportStatus("Delete", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
   }
-
-/*
-  public Status deleteBookReferenceFromAuthor(int bookID) {
-    {
-      try (final TraceScope span = _tracer.newScope(SCOPE_STRING_DELETE)) {
-        long ist = _measurements.getIntendedtartTimeNs();
-        long st = System.nanoTime();
-        Status res = _db.deleteBookReferenceFromAuthor(bookID);
-        long en = System.nanoTime();
-        measure("deleteBookReferenceFromAuthor", res, ist, st, en);
-        _measurements.reportStatus("DELETE", res);
-        return res;
-      }
-    }
-  }
-*/
 
   @Override
   public Status deleteAllRecommendationsBelongToBook(int bookID) {
@@ -412,8 +438,12 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.deleteAllRecommendationsBelongToBook(bookID);
         long en = System.nanoTime();
-        measure("deleteAllRecommendationsBelongToBook", res, ist, st, en);
-        _measurements.reportStatus("deleteAllRecommendationsBelongToBook", res);
+        measure("DeleteAllRecommendationsBelongToBook", res, ist, st, en);
+        measure("Delete", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("DeleteAllRecommendationsBelongToBook", res);
+        _measurements.reportStatus("Delete", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
@@ -427,17 +457,22 @@ public class onlineShopDBWrapper extends onlineShopDB {
         long st = System.nanoTime();
         Status res = _db.deleteAuthor(authorID);
         long en = System.nanoTime();
-        measure("deleteAuthor", res, ist, st, en);
-        _measurements.reportStatus("deleteAuthor", res);
+        measure("DeleteAuthor", res, ist, st, en);
+        measure("Delete", res, ist, st, en);
+        measure("All", res, ist, st, en);
+        _measurements.reportStatus("DeleteAuthor", res);
+        _measurements.reportStatus("Delete", res);
+        _measurements.reportStatus("All", res);
         return res;
       }
     }
   }
 
+  // TODO deleteUser(int userID)
 
-  /*-----------------------------------------------------Deprecated methods-------------------------------------------*/
-
-
+   /**
+   * Deprecated methods
+   */
   @Override
   public Status read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result) {
     return null;

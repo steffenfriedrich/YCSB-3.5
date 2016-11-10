@@ -1,9 +1,7 @@
 
-package com.arkadi.ycsb.db;
+package com.yahoo.ycsb.db.onlineshop;
 
 import com.mongodb.*;
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
@@ -15,9 +13,8 @@ import com.yahoo.ycsb.db.OptionsSupport;
 import com.yahoo.ycsb.workloads.onlineshop.Author;
 import com.yahoo.ycsb.workloads.onlineshop.Book;
 import com.yahoo.ycsb.workloads.onlineshop.Recommendation;
-import com.yahoo.ycsb.workloads.onlineshop.onlineShopDB;
+import com.yahoo.ycsb.workloads.onlineshop.OnlineShopDB;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 
 
-public class onlineShopDBClient extends onlineShopDB {
+public class MongoDbOnlineShopClient extends OnlineShopDB {
 
 
   static final Integer INCLUDE = 1;
@@ -365,8 +362,7 @@ public class onlineShopDBClient extends onlineShopDB {
   @Override
   public Status updateBook(int bookID, String title, String language, String introduction) {
     Document query = new Document("_id", bookID);
-    Document update = new Document("_id", bookID)
-      .append("title", title)
+    Document update = new Document("title", title)
       .append("language", language)
       .append("introduction", introduction);
 

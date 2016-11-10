@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-public abstract class onlineShopDB extends DB {
+public abstract class OnlineShopDB extends DB {
 
 
 

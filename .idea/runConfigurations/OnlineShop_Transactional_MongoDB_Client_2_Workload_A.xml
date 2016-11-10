@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="OnlineShop Transactional MongoDB Client 2 Workload A" type="Application" factoryName="Application">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+    <option name="MAIN_CLASS_NAME" value="com.yahoo.ycsb.Client" />
+    <option name="VM_PARAMETERS" value="" />
+    <option name="PROGRAM_PARAMETERS" value="-db com.yahoo.ycsb.db.onlineshop.MongoDbOnlineShopClient -s -P ./workloads/workloadShopA -p sickstore.url=localhost -p mongodb.url=mongodb://localhost:27017/bookStore -p measurement.interval=both -p measurementtype=hdrhistogram -p hdrhistogram.fileoutput=true -p exporter=com.yahoo.ycsb.measurements.exporter.JSONMeasurementsExporter -p exportfile=./results/mongodb_transactional/summary.json -p hdrhistogram.output.path=./results/mongodb_transactional/hdr/ -p userCount=250000 -p authorCount=6000 -p bookCount=30000 -p recCount=600000 -p recordcount=1 -p findBooksName=0.18 -target 1000 -threads 32" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <option name="ENABLE_SWING_INSPECTOR" value="false" />
+    <option name="ENV_VARIABLES" />
+    <option name="PASS_PARENT_ENVS" value="true" />
+    <module name="ycsb" />
+    <envs />
+    <method />
+  </configuration>
+</component>

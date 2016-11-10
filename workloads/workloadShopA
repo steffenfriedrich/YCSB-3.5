@@ -30,18 +30,18 @@ insertAuthor=0
 insertRecommendation=0
 
 # transaction read proportions
-getLatestRecommendations=0.14
+getLatestRecommendations=0.10
 getAllRecommendations=0.1
 getUsersRecommendations=0.1
-getAuthorByID=0.14
+getAuthorByID=0.10
 getAuthorByBookID=0.14
-findBooksByGenre=0.18
+findBooksByGenre=0.10
 findBooksName=0.18
 
 # transaction update proportions
-updateAuthor=0
-updateBook=0
-updateRecommendation=0
+updateAuthor=0.04
+updateBook=0.04
+updateRecommendation=0.08
 
 # transaction delete proportions
 deleteBook=0

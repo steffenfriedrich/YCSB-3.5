@@ -11,7 +11,20 @@ output*
 .checkstyle
 
 # ignore standard IntelliJ files
-.idea/
+.idea/copyright
+.idea/libraries
+.idea/*.name
+.idea/compiler.xml
+.idea/dataSources.ids
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace (DESKTOP-7D3D4POs in Konflikt stehende Kopie 2016-10-22).xml
+.idea/workspace.xml
+.idea/*.ids
 *.iml
 *.ipr
 *.iws

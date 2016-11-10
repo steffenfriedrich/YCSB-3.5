@@ -17,8 +17,8 @@
 
 package com.yahoo.ycsb;
 
-import com.yahoo.ycsb.workloads.onlineshop.onlineShopDB;
-import com.yahoo.ycsb.workloads.onlineshop.onlineShopDBWrapper;
+import com.yahoo.ycsb.workloads.onlineshop.OnlineShopDB;
+import com.yahoo.ycsb.workloads.onlineshop.OnlineShopDBWrapper;
 import org.apache.htrace.core.Tracer;
 
 import java.util.Properties;
@@ -44,8 +44,8 @@ class DBFactory {
     }
 
     ret.setProperties(properties);
-    if (dbname.contains("onlineShopDBClient") || dbname.contains("onlineShopDBClient2") || dbname.contains("onlineShopDBClientSQL")) {
-      return new onlineShopDBWrapper((onlineShopDB) ret, tracer);
+    if (dbname.contains("OnlineShopClient")) {
+      return new OnlineShopDBWrapper((OnlineShopDB) ret, tracer);
     } else {
       return new DBWrapper(ret, tracer);
     }

@@ -1,18 +1,14 @@
-/*
-package com.arkadi.ycsb.db;
+package com.yahoo.ycsb.db.onlineshop;
 
-import com.mongodb.client.AggregateIterable;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.yahoo.ycsb.Status;
+import com.yahoo.ycsb.db.onlineshop.MongoDbOnlineShopClient;
 import com.yahoo.ycsb.workloads.onlineshop.Recommendation;
 import org.bson.Document;
-import org.bson.conversions.Bson;
-
 import java.util.*;
 
 
-public class onlineShopDBClientAlternativeSchema extends onlineShopDBClient {
+public class MongoDbOnlineShopClient2 extends MongoDbOnlineShopClient {
 
   @Override
   public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText, String language, HashMap<Integer, String> authors) {
@@ -60,7 +56,7 @@ public class onlineShopDBClientAlternativeSchema extends onlineShopDBClient {
       Document toInsertUser = new Document("_id", userID)
         .append("userName", userName)
         .append("birthDate", birthDate)
-        .append("recommendations", null);
+        .append("recommendations", new ArrayList<Document>());
 
       if (batchSize == 1) {
         collectionU.insertOne(toInsertUser);
@@ -85,81 +81,75 @@ public class onlineShopDBClientAlternativeSchema extends onlineShopDBClient {
   @Override
   public Status insertRecommendation(int bookID, int userID, int stars, int likes, String text, Date createTime) {
 
-    Document query = new Document("_id", userID);
+    Document user = new Document("_id", userID);
     Document toInsertRecommendation = new Document("_id", bookID)
       .append("createTime", createTime)
       .append("stars", stars)
       .append("likes", likes)
       .append("text", text);
-    database.getCollection("users").updateOne(query, new Document("$push", new Document("recommendations", toInsertRecommendation)));
+    database.getCollection("users").updateOne(user, new Document("$push", new Document("recommendations", toInsertRecommendation)));
     return Status.OK;
   }
 
   @Override
   public Recommendation getUsersRecommendations(int userID) {
-    Document query = new Document("_id", userID);
-    FindIterable<Document> result = database.getCollection("users").find(query).projection(new Document("_id", 0).append("recommendations", 1));
-    //Recommendation rec = new Recommendation(Status.OK.getName(), Status.OK.getDescription(), userID);
+    Document user = new Document("_id", userID);
+    List<Document> userRecommendations = database.getCollection("users").find(user).projection(new Document("_id", 0).append("recommendations", 1)).into(new ArrayList<Document>());
 
-    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(),result);
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(),userRecommendations);
   }
 
   @Override
   public Recommendation getAllRecommendations(int bookID) {
-    Document query = new Document("_id", bookID);
-    Document queryBook = database.getCollection("books").find(query).first();
-    int[] userIDs = (int[]) queryBook.get("userCommented");
-    final List<AggregateIterable<Document>> bookRecommends = new LinkedList<>();
-    Recommendation rec = new Recommendation(Status.OK.getName(), Status.OK.getDescription(), userIDs[0], 1);
-    if (userIDs.length != 0) {
-      for (int user : userIDs) {
-        // alle recommendations for book
-        Bson queryUser = new Document("$match", user);
-        Bson unwind = new Document("$unwind", "$recommendations");
-        Bson queryRecommend = new Document("$match", new Document("recommendations._id", bookID));
-        Bson project = new Document("_id", 0).append("recommendations", 1);
-        Bson[] array = {queryUser, unwind, queryRecommend, project};
+    Document book = new Document("_id", bookID);
+    List<Integer> users = (ArrayList<Integer>) database.getCollection("books").find(book).first().get("userCommented");
+    List<Document> userRecommends = new ArrayList<>();
 
-        bookRecommends.add(database.getCollection("recommendations").aggregate(new ArrayList<>(Arrays.asList(array))));
+    if (users != null) {
+      for (int user : users) {
+        Document matchUser =      new Document("$match",  new Document("_id",user));
+        Document unwind =         new Document("$unwind", "$recommendations");
+        Document matchRecommend = new Document("$match",  new Document("recommendations._id", bookID));
+        Document project =        new Document("$project",new Document("_id", 0).append("recommendations", 1));
+
+        userRecommends.add(database.getCollection("users").aggregate(Arrays.asList(matchUser,unwind,matchRecommend,project)).first());
       }
-      return rec;
+
+      return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), userRecommends);
     }
-    return rec;
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), new Document("Status", "no recommendations exists "));
   }
 
   @Override
   public Recommendation getLatestRecommendations(int bookID, int limit) {
-    Document query = new Document("_id", bookID);
-    Document queryBook = database.getCollection("books").find(query).first();
-    int[] userIDs = (int[]) queryBook.get("userCommented");
-    final List<AggregateIterable<Document>> bookRecommends = new LinkedList<>();
-    Recommendation rec = new Recommendation(Status.OK.getName(), Status.OK.getDescription(), userIDs[0], 1);
-    if (userIDs.length != 0) {
-      for (int i = 0; i < limit; i++) {
-        // anzahl gebrauchter  zu lätzt hinzugefügten einträge
-        Bson queryUser = new Document("$match", userIDs[userIDs.length - limit - i]);
-        Bson unwind = new Document("$unwind", "$recommendations");
-        Bson queryRecommend = new Document("$match", new Document("recommendations._id", bookID));
-        Bson project = new Document("_id", 0).append("recommendations", 1);
-        Bson[] array = {queryUser, unwind, queryRecommend, project};
+    Document book = new Document("_id", bookID);
+    Document projectLimit = new Document("_id", 0).append("userCommented", 1).append("userCommented", new Document("$slice", -limit));
+    List<Integer> users = (ArrayList<Integer>) database.getCollection("books").find(book).projection(projectLimit).first().get("userCommented");
+    List<Document> latestRecommends = new ArrayList<>();
 
-        bookRecommends.add(database.getCollection("recommendations").aggregate(new ArrayList<>(Arrays.asList(array))));
+    if (users != null) {
+      for (int user : users) {
+        Document matchUser =      new Document("$match",  new Document("_id",user));
+        Document unwind =         new Document("$unwind", "$recommendations");
+        Document matchRecommend = new Document("$match",  new Document("recommendations._id", bookID));
+        Document project =        new Document("$project",new Document("_id", 0).append("recommendations", 1));
+
+        latestRecommends.add(database.getCollection("users").aggregate(Arrays.asList(matchUser,unwind,matchRecommend,project)).first());
       }
-      return rec;
-    }
-    return rec;
-  }
 
+      return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), latestRecommends);
+    }
+
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), new Document("Status", "no recommendations exists "));
+  }
 
   @Override
   public Status updateRecommendation(int bookID, int userID, int stars, String text) {
-    Document query = new Document("_id", userID).append("recommendations._id", bookID);
+    Document user = new Document("_id", userID).append("recommendations._id", bookID);
     Document update = new Document("recommendations.0.stars", stars).append("recommendations.0.text", text);
-    database.getCollection("users").updateOne(query, (new Document("$set", update)));
+    database.getCollection("users").updateOne(user, new Document("$set", update));
 
     return Status.OK;
   }
 
 }
-
-*/
