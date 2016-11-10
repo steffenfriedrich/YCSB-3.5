@@ -44,6 +44,8 @@ public class OnlineShopWorkload extends Workload {
 
 
   /* load phase */
+  private int recordcount;
+
   private int userStart;
   private int userCount;
   private int bookStart;
@@ -168,13 +170,27 @@ public class OnlineShopWorkload extends Workload {
     bookStart = Integer.parseInt(p.getProperty("bookStart","0"));
     authorStart = Integer.parseInt(p.getProperty("authorStart", "0"));
 
-    // doInsert max
-    userCount = Integer.parseInt(p.getProperty("userCount", insertUser_PROPORTION_PROPERTY_DEFAULT));
-    bookCount = Integer.parseInt(p.getProperty("bookCount", insertBook_PROPORTION_PROPERTY_DEFAULT));
-    recCount = Integer.parseInt(p.getProperty("recCount", insertRecommendation_PROPORTION_PROPERTY_DEFAULT));
-    authorCount = Integer.parseInt(p.getProperty("authorCount", insertAuthor_PROPORTION_PROPERTY_DEFAULT));
+    // doInsert counts
+    recordcount = Integer.parseInt(p.getProperty("recordcount", "1000"));
 
-    // init id insert counters
+    double userProportion = Double.parseDouble(p.getProperty("userCount", insertUser_PROPORTION_PROPERTY_DEFAULT));
+    double bookProportion  = Double.parseDouble(p.getProperty("bookCount", insertBook_PROPORTION_PROPERTY_DEFAULT));
+    double recProportion = Double.parseDouble(p.getProperty("recCount", insertRecommendation_PROPORTION_PROPERTY_DEFAULT));
+    double authorProportion = Double.parseDouble(p.getProperty("authorCount", insertAuthor_PROPORTION_PROPERTY_DEFAULT));
+
+    double insertproportions = userProportion + bookProportion + recProportion + authorProportion;
+    userProportion = userProportion / insertproportions;
+    bookProportion =  bookProportion / insertproportions;
+    recProportion = recProportion / insertproportions;
+    authorProportion = authorProportion / insertproportions;
+
+    userCount =  (int) (userProportion * recordcount);
+    bookCount =  (int) (recordcount  * bookProportion);
+    authorCount =  (int) (recordcount  * authorProportion);
+
+    recCount = recordcount  - (userCount + bookCount + authorCount);
+
+      // init id insert counters
     transactioninsertkeysequenceUser = new AcknowledgedCounterGenerator(userCount + 1);
     transactioninsertkeysequenceBook = new AcknowledgedCounterGenerator(bookCount + 1);
     transactioninsertkeysequenceAuthor = new AcknowledgedCounterGenerator(authorCount + 1);
@@ -357,27 +373,20 @@ public class OnlineShopWorkload extends Workload {
     int userID;
     int recID;
 
+    authorID = authorIDgenerator.lastValue().intValue();
+    bookID = bookIDgenerator.lastValue().intValue();
+    userID = userIDgenerator.lastValue().intValue();
+    recID = recCounter.getAndIncrement();
 
-
-    do {
+    if (authorID < authorCount) {
       doTransaction_InsertAuthor((OnlineShopDB) db);
-      authorID = authorIDgenerator.lastValue().intValue();
-    } while (authorID < authorCount);
-
-    do {
+    } else if (bookID < bookCount) {
       doTransaction_InsertBook((OnlineShopDB) db);
-      bookID = bookIDgenerator.lastValue().intValue();
-    } while (bookID < bookCount);
-
-    do {
+    } else if (userID < userCount) {
       doTransaction_InsertUser((OnlineShopDB) db);
-      userID = userIDgenerator.lastValue().intValue();
-    } while (userID < userCount);
-
-    do {
+    } else if (recID < recCount) {
       doTransaction_InsertRecommendation((OnlineShopDB) db);
-      recID = recCounter.getAndIncrement();
-    } while (recID < recCount);
+    }
 
     requestStop();
     return true;

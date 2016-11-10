@@ -1043,10 +1043,12 @@ public class Client
         if (props.containsKey(INSERT_COUNT_PROPERTY))
         {
           opcount=Integer.parseInt(props.getProperty(INSERT_COUNT_PROPERTY,"0"));
+          System.out.println("INSERT COUNT " +  opcount);
         }
         else
         {
           opcount=Integer.parseInt(props.getProperty(RECORD_COUNT_PROPERTY, DEFAULT_RECORD_COUNT));
+          System.out.println("RECORD_COUNT " +  opcount);
         }
       }
 
