@@ -12,17 +12,19 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 
+/**
+ *
+ */
 public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
-  static String serverName;
-  static String dbName;
-  static Connection database;
-  static String user;
-  static String pass;
-  static String url;
-  static String driver;
+  private static String serverName;
+  private static String dbName;
+  private static Connection database;
+  private static String user;
+  private static String pass;
+  private static String url;
+  private static String driver;
 
   public void init() {
-
     Properties props = getProperties();
     serverName = props.getProperty("serverName");
     dbName = props.getProperty("dbName");
@@ -92,7 +94,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
   }
 
   @Override
-  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText, String language, HashMap<Integer, String> authors) {
+  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText,
+                           String language, HashMap<Integer, String> authors) {
     PreparedStatement insertSql = null;
 
     try {
@@ -138,7 +141,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
 
     PreparedStatement insertSql = null;
     try {
-      insertSql = database.prepareStatement("INSERT INTO bookStore.Recommendations ([UserId],[BookId],[CreateDate],[Text],[Stars],[Likes]) VALUES(?,?,?,?,?,?)");
+      insertSql = database.prepareStatement("INSERT INTO bookStore.Recommendations ([UserId],[BookId],[CreateDate]," +
+        "[Text],[Stars],[Likes]) VALUES(?,?,?,?,?,?)");
       insertSql.setInt(1, userID);
       insertSql.setInt(2, bookID);
       insertSql.setDate(3, new java.sql.Date(createTime.getTime()));
@@ -148,7 +152,7 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
       insertSql.executeUpdate();
 
     } catch (SQLException e) {
-
+      e.printStackTrace();
     }
 
     return Status.OK;
@@ -160,7 +164,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT TOP( ? ) * FROM bookStore.Recommendations WHERE BookId= ? ORDER BY bookStore.Recommendations.InsertOrder DESC");
+      selectSql = database.prepareStatement("SELECT TOP( ? ) * FROM bookStore.Recommendations WHERE BookId= ?" +
+        " ORDER BY bookStore.Recommendations.InsertOrder DESC");
       selectSql.setInt(1, limit);
       selectSql.setInt(2, bookID);
       rs = selectSql.executeQuery();
@@ -179,7 +184,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE BookId=? ORDER BY bookStore.Recommendations.InsertOrder ASC");
+      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE BookId=? " +
+        "ORDER BY bookStore.Recommendations.InsertOrder ASC");
       selectSql.setInt(1, bookID);
       rs = selectSql.executeQuery();
 
@@ -196,7 +202,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE UserID=? ORDER BY bookStore.Recommendations.InsertOrder ASC");
+      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE UserID=? " +
+        "ORDER BY bookStore.Recommendations.InsertOrder ASC");
       selectSql.setInt(1, userID);
       rs = selectSql.executeQuery();
 
@@ -230,7 +237,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT TOP(?) B.* FROM bookStore.Genres as G join bookStore.Books as B on G.BookID=B.Id and G.Name =?");
+      selectSql = database.prepareStatement("SELECT TOP(?) B.* FROM bookStore.Genres as G join bookStore.Books " +
+        "as B on G.BookID=B.Id and G.Name =?");
       selectSql.setInt(1, limit);
       selectSql.setString(2, genre);
       rs = selectSql.executeQuery();
@@ -264,7 +272,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT A.* FROM bookStore.Authors A join (select M.AuthorID FROM bookStore.MapAuthorsBooks WHERE M.BookID= ?) as author ON author.AuthorID=A.Id");
+      selectSql = database.prepareStatement("SELECT A.* FROM bookStore.Authors A join (select M.AuthorID " +
+        "FROM bookStore.MapAuthorsBooks WHERE M.BookID= ?) as author ON author.AuthorID=A.Id");
       selectSql.setInt(1, bookID);
       rs = selectSql.executeQuery();
 
@@ -281,7 +290,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
 
     PreparedStatement updateSql = null;
     try {
-      updateSql = database.prepareStatement("UPDATE bookStore.Books SET [Title] =?,[Language]=?,[Resume]=? WHERE Id=?");
+      updateSql = database.prepareStatement("UPDATE bookStore.Books SET [Title] =?,[Language]=?,[Resume]=? " +
+        "WHERE Id=?");
       updateSql.setString(1, title);
       updateSql.setString(2, language);
       updateSql.setString(3, introduction);
@@ -301,7 +311,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
 
     PreparedStatement updateSql = null;
     try {
-      updateSql = database.prepareStatement("UPDATE bookStore.Recommendations SET [Stars] =?,[Text]=? WHERE [BookId]=? AND [UserId]=?");
+      updateSql = database.prepareStatement("UPDATE bookStore.Recommendations SET [Stars] =?,[Text]=? " +
+        "WHERE [BookId]=? AND [UserId]=?");
       updateSql.setInt(1, stars);
       updateSql.setString(2, text);
       updateSql.setInt(3, bookID);
@@ -321,7 +332,8 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
 
     PreparedStatement updateSql = null;
     try {
-      updateSql = database.prepareStatement("UPDATE bookStore.Authors SET [Name] =?,[Gender]=?,[Resume]=?,[BirthDate] =? WHERE [Id]=?");
+      updateSql = database.prepareStatement("UPDATE bookStore.Authors SET [Name] =?,[Gender]=?,[Resume]=?," +
+        "[BirthDate] =? WHERE [Id]=?");
       updateSql.setString(1, authorName);
       updateSql.setString(2, gender);
       updateSql.setString(3, resume);
@@ -391,7 +403,7 @@ public class JdbcOnlineShopDBClient2 extends OnlineShopDB {
 
   @Override
   public Status scan(String table, String startkey, int recordcount, Set<
-    String> fields, Vector<HashMap<String, ByteIterator>> result) {
+      String> fields, Vector<HashMap<String, ByteIterator>> result) {
     return null;
   }
 

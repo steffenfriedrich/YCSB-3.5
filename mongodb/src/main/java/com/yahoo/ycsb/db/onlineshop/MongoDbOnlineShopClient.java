@@ -21,22 +21,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
 
-
+/**
+ *
+ */
 public class MongoDbOnlineShopClient extends OnlineShopDB {
 
 
-  static final Integer INCLUDE = 1;
-  static final InsertManyOptions INSERT_UNORDERED = new InsertManyOptions().ordered(false);
-  static final AtomicInteger INIT_COUNT = new AtomicInteger(0);
-  static String databaseName;
-  static MongoDatabase database;
-  static MongoClient mongoClient;
-  static ReadPreference readPreference;
-  static WriteConcern writeConcern;
-  static int batchSize;
-  static boolean useUpsert;
-  List<Document> BULKINSERT_B = new ArrayList<>();
-  List<Document> BULKINSERT_A = new ArrayList<>();
+  final Integer INCLUDE = 1;
+  final InsertManyOptions INSERT_UNORDERED = new InsertManyOptions().ordered(false);
+  final AtomicInteger INIT_COUNT = new AtomicInteger(0);
+  String databaseName;
+  MongoDatabase database;
+  MongoClient mongoClient;
+  ReadPreference readPreference;
+  WriteConcern writeConcern;
+  int batchSize;
+  boolean useUpsert;
+  List<Document> bulkInsertA = new ArrayList<>();
+  List<Document> bulkInsertB = new ArrayList<>();
 
 
   public void init() throws DBException {
@@ -70,9 +72,9 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
 
       if (!url.startsWith("mongodb://")) {
         System.err.println("ERROR: Invalid URL: '" + url
-          + "'. Must be of the form "
-          + "'mongodb://<host1>:<port1>,<host2>:<port2>/database?options'. "
-          + "http://docs.mongodb.org/manual/reference/connection-string/");
+            + "'. Must be of the form "
+            + "'mongodb://<host1>:<port1>,<host2>:<port2>/database?options'. "
+            + "http://docs.mongodb.org/manual/reference/connection-string/");
         System.exit(1);
       }
 
@@ -81,7 +83,7 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
 
         String uriDb = uri.getDatabase();
         if (!defaultedUrl && (uriDb != null) && !uriDb.isEmpty()
-          && !"admin".equals(uriDb)) {
+            && !"admin".equals(uriDb)) {
           databaseName = uriDb;
         } else {
           // If no database is specified in URI, use "ycsb"
@@ -100,7 +102,7 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
         System.out.println("mongo client connection created with " + url);
       } catch (Exception e1) {
         System.err
-          .println("Could not initialize MongoDB connection pool for Loader: "
+            .println("Could not initialize MongoDB connection pool for Loader: "
             + e1.toString());
         e1.printStackTrace();
         return;
@@ -122,22 +124,22 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
       MongoCollection<Document> collectionU = database.getCollection("users");
 
       Document toInsertUser = new Document("_id", userID)
-        .append("userName", userName)
-        .append("birthDate", birthDate);
+          .append("userName", userName)
+          .append("birthDate", birthDate);
 
       if (batchSize == 1) {
         collectionU.insertOne(toInsertUser);
       } else {
-        BULKINSERT_A.add(toInsertUser);
-        if (BULKINSERT_A.size() >= batchSize || BULKINSERT_B.size() >= batchSize) {
-          collectionU.insertMany(BULKINSERT_A, INSERT_UNORDERED);
+        bulkInsertB.add(toInsertUser);
+        if (bulkInsertB.size() >= batchSize || bulkInsertA.size() >= batchSize) {
+          collectionU.insertMany(bulkInsertB, INSERT_UNORDERED);
         }
       }
 
 
     } catch (Exception e) {
       System.err.println("Exception while trying bulk insert with "
-        + BULKINSERT_A.size() + BULKINSERT_B.size());
+          + bulkInsertB.size() + bulkInsertA.size());
       e.printStackTrace();
       return Status.ERROR;
     }
@@ -152,25 +154,25 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
       //MongoCollection<Document> collectionA = database.getCollection("authors");
 
       Document toInsertAuthor = new Document("_id", authorID)
-        .append("authorFullName", authorFullName)
-        .append("gender", gender)
-        .append("birthDate", birthDate)
-        .append("resume", resume);
+          .append("authorFullName", authorFullName)
+          .append("gender", gender)
+          .append("birthDate", birthDate)
+          .append("resume", resume);
 
 
       if (batchSize == 1) {
         database.getCollection("authors").insertOne(toInsertAuthor);
       } else {
-        BULKINSERT_A.add(toInsertAuthor);
-        if (BULKINSERT_A.size() >= batchSize || BULKINSERT_B.size() >= batchSize) {
-          database.getCollection("authors").insertMany(BULKINSERT_A, INSERT_UNORDERED);
+        bulkInsertB.add(toInsertAuthor);
+        if (bulkInsertB.size() >= batchSize || bulkInsertA.size() >= batchSize) {
+          database.getCollection("authors").insertMany(bulkInsertB, INSERT_UNORDERED);
         }
       }
 
 
     } catch (Exception e) {
       System.err.println("Exception while trying bulk insert with "
-        + BULKINSERT_A.size() + BULKINSERT_B.size());
+          + bulkInsertB.size() + bulkInsertA.size());
       e.printStackTrace();
       return Status.ERROR;
     }
@@ -179,7 +181,8 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
 
    // db.book.insertOne(toInsertBook)
   @Override
-  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText, String language, HashMap<Integer, String> authors) {
+  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText,
+                           String language, HashMap<Integer, String> authors) {
     try {
       List<Document> array = new ArrayList<>();
       for (Map.Entry<Integer, String> entry : authors.entrySet()) { // author injection
@@ -187,19 +190,21 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
       }
 
       Document toInsertBook = new Document("_id", bookID)
-        .append("title", bookTitle)
-        .append("genres", genres)
-        .append("language", language)
-        .append("introductionText", introductionText)
-        .append("authors", array);
+          .append("title", bookTitle)
+          .append("genres", genres)
+          .append("language", language)
+          .append("introductionText", introductionText)
+          .append("authors", array);
 
 
-      //Keine möglichkeit buch aus author zu löschen ohne das buch zu löschen und auch anders rum beides soll gleichzeitig passieren also keine extra methode
+      //Keine möglichkeit buch aus author zu löschen ohne das buch zu löschen und auch anders rum beides soll
+      // gleichzeitig passieren also keine extra methode
 
       //System.out.println(toInsertBook);
       database.getCollection("books").insertOne(toInsertBook);
       insertRecommendationBundle(bookID, bookTitle);
-      Document update = new Document("$push", new Document("booksPublished", new Document("_id", bookID).append("title", bookTitle)));
+      Document update = new Document("$push", new Document("booksPublished", new Document("_id", bookID).
+          append("title", bookTitle)));
       for (Map.Entry<Integer, String> entry : authors.entrySet()) {
         database.getCollection("authors").updateOne(new Document("_id", entry.getKey()), update);
       }
@@ -218,9 +223,9 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
       MongoCollection<Document> collectionRecommendation = database.getCollection("recommendations");
 
       Document toInsertRecommendBundle = new Document("_id", bookID)
-        .append("recommendCount", 0)
-        .append("ratingAverage", 0)
-        .append("bookTitle", bookTitle);
+          .append("recommendCount", 0)
+          .append("ratingAverage", 0)
+          .append("bookTitle", bookTitle);
 
       collectionRecommendation.insertOne(toInsertRecommendBundle);
     } catch (Exception e) {
@@ -237,25 +242,30 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
     Document query = new Document("_id", bookID);
     Document query2 = new Document("_id", userID);
     Document toInsertRecommendation = new Document("_id", userID)
-      .append("createTime", createTime)
-      .append("stars", stars)
-      .append("likes", likes)
-      .append("text", text);
-    database.getCollection("recommendations").updateOne(query, new Document("$push", new Document("recommendations", toInsertRecommendation)));
-    database.getCollection("users").updateOne(query2, new Document("$push", new Document("bookRecommended", bookID)));
-    database.getCollection("recommendations").updateOne(query, new Document("$inc", new Document("recommendCount", 1)));
-    database.getCollection("recommendations").updateOne(query, new Document("$inc", new Document("ratingAverage", stars)));
+        .append("createTime", createTime)
+        .append("stars", stars)
+        .append("likes", likes)
+        .append("text", text);
+    database.getCollection("recommendations").updateOne(query, new Document("$push",
+        new Document("recommendations", toInsertRecommendation)));
+    database.getCollection("users").updateOne(query2, new Document("$push",
+        new Document("bookRecommended", bookID)));
+    database.getCollection("recommendations").updateOne(query, new Document("$inc",
+        new Document("recommendCount", 1)));
+    database.getCollection("recommendations").updateOne(query, new Document("$inc",
+        new Document("ratingAverage", stars)));
     return Status.OK;
   }
 
-   //db.authors.updateOne({_id: authorID},{$push:{bookPublished:{_id: bookID,bookName:bookName}}})
+  //db.authors.updateOne({_id: authorID},{$push:{bookPublished:{_id: bookID,bookName:bookName}}})
   public Status insertBookReferenceInAuthor(int authorID, int bookID, String bookName) {
- Document query = new Document("_id", authorID);
- Document update = new Document("$push", new Document("bookPublished", new Document("_id", bookID).append("bookName", bookName)));
- UpdateResult result = database.getCollection("authors").updateOne(query, update);
+    Document query = new Document("_id", authorID);
+    Document update = new Document("$push", new Document("bookPublished", new Document("_id", bookID).
+        append("bookName", bookName)));
+    UpdateResult result = database.getCollection("authors").updateOne(query, update);
 
- return Status.OK;
- }
+    return Status.OK;
+  }
 
 
 /*----------------------------------------------get operations -----------------------------------------------------*/
@@ -266,17 +276,21 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
   @Override
   public Recommendation getLatestRecommendations(int bookID, int limit) {
     Document recommendationBundle = new Document("_id", bookID);
-    Document project = new Document("_id", 0).append("recommendations", 1).append("recommendations", new Document("$slice", -limit));
-    Document newestRecommendations = database.getCollection("recommendations").find(recommendationBundle).projection(project).first();
+    Document project = new Document("_id", 0).append("recommendations", 1).
+        append("recommendations", new Document("$slice", -limit));
+    Document newestRecommendations = database.getCollection("recommendations").
+        find(recommendationBundle).projection(project).first();
 
-    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), (ArrayList<Document>) newestRecommendations.get("recommendations"));
+    return new Recommendation(Status.OK.getName(), Status.OK.getDescription(),
+      (ArrayList<Document>) newestRecommendations.get("recommendations"));
   }
 
    //db.recommendations.find({_id: recommendationBundleID}).first()
   @Override
   public Recommendation getAllRecommendations(int bookID) {
     Document query = new Document("_id", bookID);
-    List<Document> recommendations = (ArrayList<Document>) database.getCollection("recommendations").find(query).first().get("recommendations");
+    List<Document> recommendations = (ArrayList<Document>) database.getCollection("recommendations").find(query).
+        first().get("recommendations");
 
     return new Recommendation(Status.OK.getName(), Status.OK.getDescription(), recommendations);
 
@@ -288,7 +302,7 @@ public class MongoDbOnlineShopClient extends OnlineShopDB {
     Document query = new Document("_id", authorID);
     Document author = database.getCollection("authors").find(query).first();
 
-    return new Author(Status.OK.getName(), Status.OK.getDescription(),author);
+    return new Author(Status.OK.getName(), Status.OK.getDescription(), author);
   }
 
    //db.books.find({genres:{ $all: [genreList[0],genreList[n]]}}).limit(max)

@@ -12,14 +12,17 @@ import com.yahoo.ycsb.workloads.onlineshop.Recommendation;
 import com.yahoo.ycsb.workloads.onlineshop.OnlineShopDB;
 import org.bson.Document;
 
+/**
+ *
+ */
 public class JdbcOnlineShopDBClient extends OnlineShopDB {
-  static String serverName;
-  static String dbName;
-  static Connection database;
-  static String user;
-  static String pass;
-  static String url;
-  static String driver;
+  private static String serverName;
+  private static String dbName;
+  private static Connection database;
+  private static String user;
+  private static String pass;
+  private static String url;
+  private static String driver;
 
   public void init() {
 
@@ -30,14 +33,6 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
     pass = props.getProperty("pass");
     url = "jdbc:sqlserver://" + serverName + ";databaseName=" + dbName;
     driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-
-/*
-    String serverName = "DESKTOP-7D3D4PO\\MSSQLSERVER_2014";
-    String dbName = "YCSB";
-    String databaseUserName = "Arkadi";
-    String databasePassword = "Arkadi";
-    String url2 = "jdbc:sqlserver://DESKTOP-7D3D4PO\\MSSQLSERVER_2014;databaseName=YCSB";
-*/
 
     try {
       Class.forName(driver);
@@ -53,7 +48,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
     PreparedStatement insertSql = null;
     try {
-      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Users ON;INSERT INTO bookStore.Users(Id,Name,BirthDate) VALUES(?,?,?)");
+      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Users ON;" +
+        "INSERT INTO bookStore.Users(Id,Name,BirthDate) VALUES(?,?,?)");
       insertSql.setInt(1, userID);
       insertSql.setString(2, userName);
       insertSql.setDate(3, new java.sql.Date(birthDate.getTime()));
@@ -71,7 +67,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
     PreparedStatement insertSql = null;
     try {
-      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Authors ON;INSERT INTO bookStore.Authors(Id,Name,BirthDate,Gender,[Resume]) VALUES(?,?,?,?,?) ");
+      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Authors ON;" +
+        "INSERT INTO bookStore.Authors(Id,Name,BirthDate,Gender,[Resume]) VALUES(?,?,?,?,?) ");
       insertSql.setInt(1, authorID);
       insertSql.setString(2, authorFullName);
       insertSql.setDate(3, new java.sql.Date(birthDate.getTime()));
@@ -88,7 +85,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
   }
 
   @Override
-  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres, String introductionText, String language, HashMap<Integer, String> authors) {
+  public Status insertBook(int bookID, String bookTitle, ArrayList<String> genres,
+                           String introductionText, String language, HashMap<Integer, String> authors) {
 
     String authorsList = "";
     for (Map.Entry<Integer, String> entry : authors.entrySet()) { // author injection
@@ -101,7 +99,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
     PreparedStatement insertSql = null;
     try {
-      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Books ON;INSERT INTO bookStore.Books([Id],[Title],[Language],[Resume],[Genres],[Authors]) VALUES (?,?,?,?,?,?)");
+      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Books ON;" +
+        "INSERT INTO bookStore.Books([Id],[Title],[Language],[Resume],[Genres],[Authors]) VALUES (?,?,?,?,?,?)");
       insertSql.setInt(1, bookID);
       insertSql.setString(2, bookTitle);
       insertSql.setString(3, language);
@@ -123,7 +122,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
     PreparedStatement insertSql = null;
     try {
-      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Authors ON;INSERT INTO bookStore.Recommendations ([UserId],[BookId],[CreateDate],[Text],[Stars],[Likes]) VALUES(?,?,?,?,?,?)");
+      insertSql = database.prepareStatement("SET IDENTITY_INSERT bookStore.Authors ON;INSERT INTO " +
+        "bookStore.Recommendations ([UserId],[BookId],[CreateDate],[Text],[Stars],[Likes]) VALUES(?,?,?,?,?,?)");
       insertSql.setInt(1, userID);
       insertSql.setInt(2, bookID);
       insertSql.setDate(3, new java.sql.Date(createTime.getTime()));
@@ -133,7 +133,7 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
       insertSql.executeUpdate();
 
     } catch (SQLException e) {
-
+      e.printStackTrace();
     }
 
     return Status.OK;
@@ -145,7 +145,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT TOP( ? ) * FROM bookStore.Recommendations WHERE BookId= ? ORDER BY bookStore.Recommendations.InsertOrder DESC");
+      selectSql = database.prepareStatement("SELECT TOP( ? ) * FROM bookStore.Recommendations WHERE BookId= ?" +
+        " ORDER BY bookStore.Recommendations.InsertOrder DESC");
       selectSql.setInt(1, limit);
       selectSql.setInt(2, bookID);
       rs = selectSql.executeQuery();
@@ -164,7 +165,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE BookId=? ORDER BY bookStore.Recommendations.InsertOrder ASC");
+      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE BookId=? " +
+        "ORDER BY bookStore.Recommendations.InsertOrder ASC");
       selectSql.setInt(1, bookID);
       rs = selectSql.executeQuery();
 
@@ -181,7 +183,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
-      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE UserID=? ORDER BY bookStore.Recommendations.InsertOrder ASC");
+      selectSql = database.prepareStatement("SELECT * FROM bookStore.Recommendations WHERE UserID=? " +
+        "ORDER BY bookStore.Recommendations.InsertOrder ASC");
       selectSql.setInt(1, userID);
       rs = selectSql.executeQuery();
 
@@ -247,7 +250,7 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
   @Override
   public Author findAuthorsByBookID(int bookID) {
-    ArrayList<Document> ListAuthors = new ArrayList<>();
+    ArrayList<Document> listAuthors = new ArrayList<>();
     ResultSet rs = null;
     PreparedStatement selectSql = null;
     try {
@@ -262,23 +265,24 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
         selectSql.setInt(1, Integer.parseInt(aut));
         rs = selectSql.executeQuery();
 
-        ListAuthors.add(new Document("id", rs.getString("Id")).
-          append("Name", rs.getString("[Name[")).
-          append("BirthDate", rs.getString("BirthDate")).
-          append("Gender", rs.getString("Gender")).
-          append("Resume", rs.getString("[Resume]")));
+        listAuthors.add(new Document("id", rs.getString("Id")).
+            append("Name", rs.getString("[Name[")).
+            append("BirthDate", rs.getString("BirthDate")).
+            append("Gender", rs.getString("Gender")).
+            append("Resume", rs.getString("[Resume]")));
       }
-      return new Author(Status.OK.getName(), Status.OK.getDescription(), ListAuthors);
+      return new Author(Status.OK.getName(), Status.OK.getDescription(), listAuthors);
     } catch (Exception e) {
       e.printStackTrace();
     }
     return null;
   }
 
-//TODO
+  //TODO
   @Override
   public Status updateBook(int bookID, String title, String language, String introduction) {
-    String update = "UPDATE bookStore.Books SET [Title] ='" + title + "',[Language]='" + language + "',[Resume]='" + introduction + "' WHERE Id=" + bookID;
+    String update = "UPDATE bookStore.Books SET [Title] ='" + title + "',[Language]='" + language +
+        "',[Resume]='" + introduction + "' WHERE Id=" + bookID;
 
     try {
       Statement stmt = database.createStatement();
@@ -294,7 +298,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
   @Override
   public Status updateRecommendation(int bookID, int userID, int stars, String text) {
 
-    String update = "UPDATE bookStore.Recommendations SET [Stars] =" + stars + ",[Text]='" + text + "' WHERE BookId=" + bookID + "AND UserId";
+    String update = "UPDATE bookStore.Recommendations SET [Stars] =" + stars + ",[Text]='" + text +
+        "' WHERE BookId=" + bookID + "AND UserId";
 
     try {
       Statement stmt = database.createStatement();
@@ -311,7 +316,8 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
   @Override
   public Status updateAuthor(int authorID, String authorName, String gender, Date birthDate, String resume) {
-    String update = "UPDATE bookStore.Authors SET [Name] ='" + authorName + "',Gender='" + gender + "',[Resume]='" + resume + "',BirthDate =" + birthDate + " WHERE Id=" + authorID;
+    String update = "UPDATE bookStore.Authors SET [Name] ='" + authorName + "',Gender='" + gender +
+        "',[Resume]='" + resume + "',BirthDate =" + birthDate + " WHERE Id=" + authorID;
 
     try {
       Statement stmt = database.createStatement();
@@ -376,7 +382,7 @@ public class JdbcOnlineShopDBClient extends OnlineShopDB {
 
   @Override
   public Status scan(String table, String startkey, int recordcount, Set<
-    String> fields, Vector<HashMap<String, ByteIterator>> result) {
+      String> fields, Vector<HashMap<String, ByteIterator>> result) {
     return null;
   }
 

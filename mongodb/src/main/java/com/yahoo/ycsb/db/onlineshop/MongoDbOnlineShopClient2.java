@@ -2,7 +2,6 @@ package com.yahoo.ycsb.db.onlineshop;
 
 import com.mongodb.client.MongoCollection;
 import com.yahoo.ycsb.Status;
-import com.yahoo.ycsb.db.onlineshop.MongoDbOnlineShopClient;
 import com.yahoo.ycsb.workloads.onlineshop.Recommendation;
 import org.bson.Document;
 import java.util.*;
@@ -61,16 +60,16 @@ public class MongoDbOnlineShopClient2 extends MongoDbOnlineShopClient {
       if (batchSize == 1) {
         collectionU.insertOne(toInsertUser);
       } else {
-        BULKINSERT_A.add(toInsertUser);
-        if (BULKINSERT_A.size() >= batchSize || BULKINSERT_B.size() >= batchSize) {
-          collectionU.insertMany(BULKINSERT_A, INSERT_UNORDERED);
+        bulkInsertB.add(toInsertUser);
+        if (bulkInsertB.size() >= batchSize || bulkInsertA.size() >= batchSize) {
+          collectionU.insertMany(bulkInsertB, INSERT_UNORDERED);
         }
       }
 
 
     } catch (Exception e) {
       System.err.println("Exception while trying bulk insert with "
-        + BULKINSERT_A.size() + BULKINSERT_B.size());
+        + bulkInsertB.size() + bulkInsertA.size());
       e.printStackTrace();
       return Status.ERROR;
     }
