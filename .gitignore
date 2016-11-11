@@ -14,6 +14,7 @@ output*
 .idea/copyright
 .idea/libraries
 .idea/*.name
+.idea/checkstyle-idea.xml
 .idea/compiler.xml
 .idea/dataSources.ids
 .idea/dataSources.local.xml
@@ -35,3 +36,8 @@ output*
 
 # ignore standard Mac OS X files/dirs
 .DS_Store
+.idea/codeStyleSettings.xml
+.idea/runConfigurations/OnlineShop_Transactional_MongoDB_Client_1__Workload_A.xml
+.idea/uiDesigner.xml
+cassandra/.toDelete
+results/
